@@ -1,0 +1,745 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dulce Tentación - Postres Artesanales</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #fef9f3;
+      --bg-alt: #f9f0e6;
+      --fg: #3d2c1e;
+      --fg-muted: #7a6555;
+      --accent: #c45d3a;
+      --accent-hover: #a84d2f;
+      --card: #ffffff;
+      --border: #e8dcd0;
+      --success: #5a8a5c;
+      --error: #b85450;
+      --history-accent: #8b6f4e;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Outfit', sans-serif;
+      background-color: var(--bg);
+      color: var(--fg);
+      line-height: 1.6;
+    }
+
+    h1, h2, h3, h4 {
+      font-family: 'Cormorant Garamond', serif;
+      line-height: 1.2;
+    }
+
+    /* Animaciones */
+    @keyframes fadeUp {
+      from {
+        opacity: 0;
+        transform: translateY(24px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes scaleIn {
+      from {
+        opacity: 0;
+        transform: scale(0.95);
+      }
+      to {
+        opacity: 1;
+        transform: scale(1);
+      }
+    }
+
+    @keyframes slideIn {
+      from {
+        opacity: 0;
+        transform: translateX(100%);
+      }
+      to {
+        opacity: 1;
+        transform: translateX(0);
+      }
+    }
+
+    @keyframes shimmer {
+      0% { background-position: -200% 0; }
+      100% { background-position: 200% 0; }
+    }
+
+    /* Animación de éxito al completar compra */
+    @keyframes purchaseSuccess {
+      0% {
+        transform: translateX(-50%) translateY(0) scale(1);
+        opacity: 1;
+      }
+      50% {
+        transform: translateX(-50%) translateY(-10px) scale(1.05);
+        opacity: 1;
+      }
+      100% {
+        transform: translateX(-50%) translateY(0) scale(1);
+        opacity: 1;
+      }
+    }
+
+    .toast.purchase-success.visible {
+      animation: purchaseSuccess 0.6s ease-out forwards;
+    }
+
+    /* Animación de pulso para el botón de historial */
+    @keyframes badgePulse {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.2); }
+      100% { transform: scale(1); }
+    }
+
+    .badge-pulse {
+      animation: badgePulse 0.4s ease-out;
+    }
+
+    /* Animación de confeti suave al completar compra */
+    @keyframes confettiFall {
+      0% {
+        opacity: 1;
+        transform: translateY(0) rotate(0deg);
+      }
+      100% {
+        opacity: 0;
+        transform: translateY(80px) rotate(360deg);
+      }
+    }
+
+    .confetti-particle {
+      position: fixed;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      z-index: 300;
+      pointer-events: none;
+      animation: confettiFall 1.2s ease-out forwards;
+    }
+
+    .animate-fade-up {
+      animation: fadeUp 0.5s ease-out forwards;
+    }
+
+    .animate-scale-in {
+      animation: scaleIn 0.3s ease-out forwards;
+    }
+
+    .animate-slide-in {
+      animation: slideIn 0.3s ease-out forwards;
+    }
+
+    .stagger { opacity: 0; }
+    .stagger-1 { animation-delay: 0.05s; }
+    .stagger-2 { animation-delay: 0.1s; }
+    .stagger-3 { animation-delay: 0.15s; }
+    .stagger-4 { animation-delay: 0.2s; }
+    .stagger-5 { animation-delay: 0.25s; }
+
+    @media (prefers-reduced-motion: reduce) {
+      .animate-fade-up,
+      .animate-scale-in,
+      .animate-slide-in,
+      .toast.purchase-success.visible,
+      .badge-pulse,
+      .confetti-particle {
+        animation: none;
+        opacity: 1;
+        transform: none;
+      }
+    }
+
+    /* Componentes */
+    .btn-primary {
+      background: var(--accent);
+      color: white;
+      border: none;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      font-weight: 500;
+    }
+
+    .btn-primary:hover {
+      background: var(--accent-hover);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(196, 93, 58, 0.25);
+    }
+
+    .btn-primary:active {
+      transform: translateY(0);
+    }
+
+    .btn-primary:focus-visible {
+      outline: 3px solid var(--accent);
+      outline-offset: 2px;
+    }
+
+    .btn-primary:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .product-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      overflow: hidden;
+      transition: all 0.3s ease;
+    }
+
+    .product-card:hover {
+      transform: translateY(-6px);
+      box-shadow: 0 16px 40px rgba(61, 44, 30, 0.1);
+    }
+
+    .product-card:hover .product-img {
+      transform: scale(1.05);
+    }
+
+    .product-img-wrapper {
+      overflow: hidden;
+      position: relative;
+    }
+
+    .product-img {
+      transition: transform 0.4s ease;
+    }
+
+    .input-field {
+      width: 100%;
+      padding: 14px 16px;
+      border: 2px solid var(--border);
+      border-radius: 12px;
+      font-family: inherit;
+      font-size: 1rem;
+      background: var(--card);
+      transition: all 0.2s ease;
+    }
+
+    .input-field:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 4px rgba(196, 93, 58, 0.1);
+    }
+
+    .input-field.error {
+      border-color: var(--error);
+      background: #fff8f7;
+    }
+
+    .input-field.success {
+      border-color: var(--success);
+    }
+
+    .error-msg {
+      color: var(--error);
+      font-size: 0.875rem;
+      margin-top: 6px;
+      display: none;
+    }
+
+    .error-msg.visible {
+      display: block;
+    }
+
+    /* Sidebar del carrito */
+    .cart-sidebar {
+      position: fixed;
+      top: 0;
+      right: 0;
+      width: 100%;
+      max-width: 420px;
+      height: 100vh;
+      background: var(--bg);
+      transform: translateX(100%);
+      transition: transform 0.3s ease;
+      z-index: 100;
+      display: flex;
+      flex-direction: column;
+      box-shadow: -8px 0 32px rgba(61, 44, 30, 0.15);
+    }
+
+    .cart-sidebar.open {
+      transform: translateX(0);
+    }
+
+    /* Sidebar del historial de compras */
+    .history-sidebar {
+      position: fixed;
+      top: 0;
+      right: 0;
+      width: 100%;
+      max-width: 480px;
+      height: 100vh;
+      background: var(--bg);
+      transform: translateX(100%);
+      transition: transform 0.3s ease;
+      z-index: 100;
+      display: flex;
+      flex-direction: column;
+      box-shadow: -8px 0 32px rgba(61, 44, 30, 0.15);
+    }
+
+    .history-sidebar.open {
+      transform: translateX(0);
+    }
+
+    .cart-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(61, 44, 30, 0.4);
+      backdrop-filter: blur(4px);
+      z-index: 99;
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.3s ease;
+    }
+
+    .cart-overlay.visible {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .badge {
+      position: absolute;
+      top: -6px;
+      right: -6px;
+      min-width: 22px;
+      height: 22px;
+      background: var(--accent);
+      color: white;
+      font-size: 0.75rem;
+      font-weight: 600;
+      border-radius: 11px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0 6px;
+    }
+
+    /* Badge del historial con color diferenciado */
+    .badge-history {
+      background: var(--history-accent);
+    }
+
+    .featured-tag {
+      position: absolute;
+      top: 12px;
+      left: 12px;
+      background: linear-gradient(135deg, var(--accent) 0%, #d97756 100%);
+      color: white;
+      font-size: 0.7rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      padding: 6px 12px;
+      border-radius: 20px;
+      z-index: 1;
+    }
+
+    .qty-btn {
+      width: 32px;
+      height: 32px;
+      border: none;
+      border-radius: 8px;
+      background: var(--bg-alt);
+      color: var(--fg);
+      font-size: 1.25rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.15s ease;
+    }
+
+    .qty-btn:hover {
+      background: var(--accent);
+      color: white;
+    }
+
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%) translateY(120px);
+      padding: 14px 28px;
+      border-radius: 12px;
+      font-weight: 500;
+      z-index: 200;
+      opacity: 0;
+      transition: all 0.3s ease;
+      white-space: nowrap;
+    }
+
+    .toast.visible {
+      transform: translateX(-50%) translateY(0);
+      opacity: 1;
+    }
+
+    .toast.success {
+      background: var(--success);
+      color: white;
+    }
+
+    .toast.error {
+      background: var(--error);
+      color: white;
+    }
+
+    .hero-bg {
+      background: 
+        radial-gradient(ellipse at 30% 0%, rgba(196, 93, 58, 0.08) 0%, transparent 50%),
+        radial-gradient(ellipse at 70% 100%, rgba(196, 93, 58, 0.06) 0%, transparent 40%),
+        var(--bg);
+    }
+
+    .scrollbar-custom::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    .scrollbar-custom::-webkit-scrollbar-track {
+      background: var(--bg-alt);
+      border-radius: 3px;
+    }
+
+    .scrollbar-custom::-webkit-scrollbar-thumb {
+      background: var(--border);
+      border-radius: 3px;
+    }
+
+    .section-divider {
+      width: 60px;
+      height: 3px;
+      background: var(--accent);
+      border-radius: 2px;
+    }
+
+    /* Estilos para las compras en el historial */
+    .history-purchase {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      overflow: hidden;
+      transition: all 0.2s ease;
+    }
+
+    .history-purchase:hover {
+      box-shadow: 0 4px 16px rgba(61, 44, 30, 0.08);
+    }
+
+    .history-purchase-header {
+      background: linear-gradient(135deg, var(--bg-alt) 0%, var(--card) 100%);
+      border-bottom: 1px solid var(--border);
+      padding: 14px 18px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .history-purchase-item {
+      display: flex;
+      gap: 12px;
+      padding: 12px 18px;
+      border-bottom: 1px solid var(--border);
+      align-items: center;
+    }
+
+    .history-purchase-item:last-child {
+      border-bottom: none;
+    }
+
+    .history-purchase-item img {
+      width: 48px;
+      height: 48px;
+      border-radius: 8px;
+      object-fit: cover;
+      flex-shrink: 0;
+    }
+
+    .history-total-bar {
+      background: linear-gradient(135deg, var(--history-accent) 0%, #a88860 100%);
+      color: white;
+      padding: 14px 18px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-weight: 600;
+    }
+
+    /* Botón de historial en el header */
+    .btn-header-icon {
+      position: relative;
+      padding: 8px;
+      border-radius: 12px;
+      border: none;
+      background: transparent;
+      cursor: pointer;
+      transition: background 0.2s ease;
+    }
+
+    .btn-header-icon:hover {
+      background: var(--bg-alt);
+    }
+
+    .btn-header-icon:focus-visible {
+      outline: 3px solid var(--accent);
+      outline-offset: 2px;
+    }
+  </style>
+</head>
+<body>
+  <!-- Header -->
+  <header class="fixed top-0 left-0 right-0 z-50 bg-[var(--bg)]/95 backdrop-blur-sm border-b border-[var(--border)]">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex items-center justify-between h-16 sm:h-20">
+        <a href="#" class="flex items-center gap-3">
+          <div class="w-11 h-11 rounded-xl bg-[var(--accent)] flex items-center justify-center">
+            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 8.25v-1.5m0 1.5c-1.355 0-2.697.056-4.024.166C6.845 8.51 6 9.473 6 10.608v2.513m6-4.87c1.355 0 2.697.055 4.024.165C17.155 8.51 18 9.473 18 10.608v2.513m-3-4.87v-1.5m-6 1.5v-1.5m12 9.75l-1.5.75a3.354 3.354 0 01-3 0 3.354 3.354 0 00-3 0 3.354 3.354 0 01-3 0 3.354 3.354 0 00-3 0 3.354 3.354 0 01-3 0L3 16.5m15-3.38a48.474 48.474 0 00-6-.37c-2.032 0-4.034.125-6 .37m12 0c.39.049.777.102 1.163.16 1.07.16 1.837 1.094 1.837 2.175v5.17c0 .62-.504 1.124-1.125 1.124H4.125A1.125 1.125 0 013 20.625v-5.17c0-1.08.768-2.014 1.837-2.174A47.78 47.78 0 016 13.12M12.265 3.11a.375.375 0 11-.53 0L12 2.845l.265.265zm-3 0a.375.375 0 11-.53 0L9 2.845l.265.265zm6 0a.375.375 0 11-.53 0L15 2.845l.265.265z"/>
+            </svg>
+          </div>
+          <span class="text-xl sm:text-2xl font-semibold text-[var(--fg)]" style="font-family: 'Cormorant Garamond', serif;">Dulce Tentación</span>
+        </a>
+        
+        <!-- Botones del header: Historial y Carrito -->
+        <div class="flex items-center gap-2">
+          <!-- Botón Historial de Compras -->
+          <button id="btnHistorial" class="btn-header-icon" aria-label="Ver historial de compras">
+            <svg class="w-6 h-6 text-[var(--fg)]" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+            <span id="historyBadge" class="badge badge-history hidden">0</span>
+          </button>
+
+          <!-- Botón Carrito -->
+          <button id="btnCarrito" class="btn-header-icon" aria-label="Ver carrito de compras">
+            <svg class="w-6 h-6 text-[var(--fg)]" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 3h1.386c.51 0 .955.343 1.087.835l.383 1.437M7.5 14.25a3 3 0 00-3 3h15.75m-12.75-3h11.218c1.121-2.3 2.1-4.684 2.924-7.138a60.114 60.114 0 00-16.536-1.84M7.5 14.25L5.106 5.272M6 20.25a.75.75 0 11-1.5 0 .75.75 0 011.5 0zm12.75 0a.75.75 0 11-1.5 0 .75.75 0 011.5 0z"/>
+            </svg>
+            <span id="cartBadge" class="badge hidden">0</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="pt-16 sm:pt-20">
+    <!-- Hero -->
+    <section class="hero-bg py-16 sm:py-24 lg:py-32">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="max-w-3xl mx-auto text-center">
+          <h1 class="text-4xl sm:text-5xl lg:text-6xl font-bold text-[var(--fg)] mb-6 animate-fade-up">
+            Postres que despiertan los sentidos
+          </h1>
+          <p class="text-lg sm:text-xl text-[var(--fg-muted)] mb-10 animate-fade-up stagger stagger-1">
+            Elaboramos cada creación con ingredientes selectos y el auténtico sabor de la repostería artesanal. Descubre el placer en cada bocado.
+          </p>
+          <div class="flex flex-wrap justify-center gap-4 animate-fade-up stagger stagger-2">
+            <a href="#destacados" class="btn-primary px-8 py-3.5 rounded-xl text-base">
+              Ver destacados
+            </a>
+            <a href="#productos" class="px-8 py-3.5 rounded-xl text-base border-2 border-[var(--border)] text-[var(--fg)] hover:border-[var(--accent)] hover:text-[var(--accent)] transition-colors">
+              Explorar menú
+            </a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Destacados -->
+    <section id="destacados" class="py-16 sm:py-20 bg-[var(--bg-alt)]">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="mb-10 sm:mb-12">
+          <span class="text-[var(--accent)] font-medium text-sm uppercase tracking-wider">Los favoritos</span>
+          <h2 class="text-3xl sm:text-4xl font-bold text-[var(--fg)] mt-2">Top 5 Más Pedidos</h2>
+          <div class="section-divider mt-4"></div>
+        </div>
+        <div id="contenedorDestacados" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6"></div>
+      </div>
+    </section>
+
+    <!-- Todos los Productos -->
+    <section id="productos" class="py-16 sm:py-20">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="mb-10 sm:mb-12">
+          <span class="text-[var(--accent)] font-medium text-sm uppercase tracking-wider">Nuestra carta</span>
+          <h2 class="text-3xl sm:text-4xl font-bold text-[var(--fg)] mt-2">Todos los Postres</h2>
+          <div class="section-divider mt-4"></div>
+        </div>
+        <div id="contenedorProductos" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"></div>
+      </div>
+    </section>
+
+    <!-- Formulario de Contacto -->
+    <section id="contacto" class="py-16 sm:py-20 bg-[var(--bg-alt)]">
+      <div class="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center mb-10">
+          <span class="text-[var(--accent)] font-medium text-sm uppercase tracking-wider">Escríbenos</span>
+          <h2 class="text-3xl sm:text-4xl font-bold text-[var(--fg)] mt-2">Contáctanos</h2>
+          <p class="text-[var(--fg-muted)] mt-3">¿Tienes un pedido especial o pregunta? Estamos aquí para ayudarte.</p>
+        </div>
+        
+        <form id="formularioContacto" class="bg-[var(--card)] rounded-2xl p-6 sm:p-8 shadow-lg border border-[var(--border)]" novalidate>
+          <div class="space-y-5">
+            <!-- Nombre -->
+            <div>
+              <label for="inputNombre" class="block text-sm font-medium text-[var(--fg)] mb-2">Nombre completo *</label>
+              <input type="text" id="inputNombre" name="nombre" class="input-field" placeholder="Tu nombre" required aria-describedby="errorNombre">
+              <span id="errorNombre" class="error-msg" role="alert"></span>
+            </div>
+            
+            <!-- Email -->
+            <div>
+              <label for="inputEmail" class="block text-sm font-medium text-[var(--fg)] mb-2">Correo electrónico *</label>
+              <input type="email" id="inputEmail" name="email" class="input-field" placeholder="tu@email.com" required aria-describedby="errorEmail">
+              <span id="errorEmail" class="error-msg" role="alert"></span>
+            </div>
+            
+            <!-- Teléfono -->
+            <div>
+              <label for="inputTelefono" class="block text-sm font-medium text-[var(--fg)] mb-2">Teléfono *</label>
+              <input type="tel" id="inputTelefono" name="telefono" class="input-field" placeholder="+52 123 456 7890" required aria-describedby="errorTelefono">
+              <span id="errorTelefono" class="error-msg" role="alert"></span>
+            </div>
+            
+            <!-- Tipo de pedido -->
+            <div>
+              <label for="selectTipo" class="block text-sm font-medium text-[var(--fg)] mb-2">Tipo de pedido *</label>
+              <select id="selectTipo" name="tipo" class="input-field cursor-pointer" required aria-describedby="errorTipo">
+                <option value="">Selecciona una opción</option>
+                <option value="personal">Pedido personal</option>
+                <option value="evento">Evento o celebración</option>
+                <option value="empresa">Pedido empresarial</option>
+                <option value="otro">Otro</option>
+              </select>
+              <span id="errorTipo" class="error-msg" role="alert"></span>
+            </div>
+            
+            <!-- Mensaje -->
+            <div>
+              <label for="inputMensaje" class="block text-sm font-medium text-[var(--fg)] mb-2">Mensaje *</label>
+              <textarea id="inputMensaje" name="mensaje" rows="4" class="input-field resize-none" placeholder="Cuéntanos los detalles de tu pedido..." required aria-describedby="errorMensaje"></textarea>
+              <span id="errorMensaje" class="error-msg" role="alert"></span>
+            </div>
+            
+            <button type="submit" class="btn-primary w-full py-4 rounded-xl text-base mt-2">
+              Enviar mensaje
+            </button>
+          </div>
+        </form>
+      </div>
+    </section>
+  </main>
+
+  <!-- Footer -->
+  <footer class="bg-[var(--fg)] text-white py-12">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex flex-col sm:flex-row items-center justify-between gap-6">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-xl bg-[var(--accent)] flex items-center justify-center">
+            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 8.25v-1.5m0 1.5c-1.355 0-2.697.056-4.024.166C6.845 8.51 6 9.473 6 10.608v2.513m6-4.87c1.355 0 2.697.055 4.024.165C17.155 8.51 18 9.473 18 10.608v2.513m-3-4.87v-1.5m-6 1.5v-1.5m12 9.75l-1.5.75a3.354 3.354 0 01-3 0 3.354 3.354 0 00-3 0 3.354 3.354 0 01-3 0 3.354 3.354 0 00-3 0 3.354 3.354 0 01-3 0L3 16.5m15-3.38a48.474 48.474 0 00-6-.37c-2.032 0-4.034.125-6 .37m12 0c.39.049.777.102 1.163.16 1.07.16 1.837 1.094 1.837 2.175v5.17c0 .62-.504 1.124-1.125 1.124H4.125A1.125 1.125 0 013 20.625v-5.17c0-1.08.768-2.014 1.837-2.174A47.78 47.78 0 016 13.12M12.265 3.11a.375.375 0 11-.53 0L12 2.845l.265.265zm-3 0a.375.375 0 11-.53 0L9 2.845l.265.265zm6 0a.375.375 0 11-.53 0L15 2.845l.265.265z"/>
+            </svg>
+          </div>
+          <span class="text-lg font-semibold" style="font-family: 'Cormorant Garamond', serif;">Dulce Tentación</span>
+        </div>
+        <p class="text-white/50 text-sm">2024 Dulce Tentación. Todos los derechos reservados.</p>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Overlay del carrito -->
+  <div id="overlayCarrito" class="cart-overlay"></div>
+
+  <!-- Sidebar del carrito -->
+  <aside id="sidebarCarrito" class="cart-sidebar" aria-label="Carrito de compras">
+    <div class="flex items-center justify-between p-5 border-b border-[var(--border)]">
+      <h3 class="text-xl font-bold text-[var(--fg)]" style="font-family: 'Cormorant Garamond', serif;">Tu Carrito</h3>
+      <button id="btnCerrarCarrito" class="p-2 rounded-xl hover:bg-[var(--bg-alt)] transition-colors" aria-label="Cerrar carrito">
+        <svg class="w-5 h-5 text-[var(--fg)]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+        </svg>
+      </button>
+    </div>
+    
+    <div id="listaCarrito" class="flex-1 overflow-y-auto p-5 scrollbar-custom"></div>
+    
+    <div id="carritoVacio" class="flex-1 flex flex-col items-center justify-center p-5 text-center hidden">
+      <div class="w-16 h-16 rounded-full bg-[var(--bg-alt)] flex items-center justify-center mb-4">
+        <svg class="w-8 h-8 text-[var(--fg-muted)]" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 3h1.386c.51 0 .955.343 1.087.835l.383 1.437M7.5 14.25a3 3 0 00-3 3h15.75m-12.75-3h11.218c1.121-2.3 2.1-4.684 2.924-7.138a60.114 60.114 0 00-16.536-1.84M7.5 14.25L5.106 5.272M6 20.25a.75.75 0 11-1.5 0 .75.75 0 011.5 0zm12.75 0a.75.75 0 11-1.5 0 .75.75 0 011.5 0z"/>
+        </svg>
+      </div>
+      <p class="text-lg font-medium text-[var(--fg)]">Tu carrito está vacío</p>
+      <p class="text-[var(--fg-muted)] text-sm mt-1">Agrega algunos postres deliciosos</p>
+    </div>
+    
+    <div id="footerCarrito" class="p-5 border-t border-[var(--border)] bg-[var(--card)] hidden">
+      <div class="flex items-center justify-between mb-4">
+        <span class="text-lg font-medium text-[var(--fg)]">Total</span>
+        <span id="totalCarrito" class="text-2xl font-bold text-[var(--accent)]">$0</span>
+      </div>
+      <button id="btnCheckout" class="btn-primary w-full py-4 rounded-xl" disabled>
+        Proceder al pago
+      </button>
+    </div>
+  </aside>
+
+  <!-- Overlay del historial -->
+  <div id="overlayHistorial" class="cart-overlay"></div>
+
+  <!-- Sidebar del historial de compras -->
+  <aside id="sidebarHistorial" class="history-sidebar" aria-label="Historial de compras">
+    <div class="flex items-center justify-between p-5 border-b border-[var(--border)]">
+      <div class="flex items-center gap-3">
+        <div class="w-9 h-9 rounded-lg bg-[var(--history-accent)] flex items-center justify-center">
+          <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z"/>
+          </svg>
+        </div>
+        <h3 class="text-xl font-bold text-[var(--fg)]" style="font-family: 'Cormorant Garamond', serif;">Historial de Compras</h3>
+      </div>
+      <button id="btnCerrarHistorial" class="p-2 rounded-xl hover:bg-[var(--bg-alt)] transition-colors" aria-label="Cerrar historial">
+        <svg class="w-5 h-5 text-[var(--fg)]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+        </svg>
+      </button>
+    </div>
+    
+    <div id="listaHistorial" class="flex-1 overflow-y-auto p-5 scrollbar-custom"></div>
+    
+    <div id="historialVacio" class="flex-1 flex flex-col items-center justify-center p-5 text-center hidden">
+      <div class="w-16 h-16 rounded-full bg-[var(--bg-alt)] flex items-center justify-center mb-4">
+        <svg class="w-8 h-8 text-[var(--fg-muted)]" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z"/>
+        </svg>
+      </div>
+      <p class="text-lg font-medium text-[var(--fg)]">No hay compras realizadas</p>
+      <p class="text-[var(--fg-muted)] text-sm mt-1">Tus compras completadas aparecerán aquí</p>
+    </div>
+  </aside>
+
+  <!-- Toast -->
+  <div id="toast" class="toast" role="alert" aria-live="polite"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>
